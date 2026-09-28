@@ -1,0 +1,16 @@
+{
+  "name": "flip-siete",
+  "version": "1.0.0",
+  "description": "Juego de cartas push-your-luck multijugador en tiempo real",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.21.3"
+  }
+}

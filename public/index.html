@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flip Siete</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141024;--table:#1d1736;--table-2:#251d45;--edge:#3a2f63;
+  --text:#f2eefb;--dim:#a89dc9;--lime:#c6f24e;--hot:#ff5d73;--ice:#63d7ff;--gold:#ffc95c;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:radial-gradient(120% 80% at 50% 0%,var(--table-2) 0%,var(--table) 45%,var(--ink) 100%);
+  color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+.wrap{max-width:880px;margin:0 auto;padding:16px 14px 30px}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.brand{font-weight:900;font-size:22px;letter-spacing:-.02em;line-height:1}
+.brand span{color:var(--lime)}
+.meta{font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums}
+.seats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px}
+.seat{background:rgba(255,255,255,.04);border:1px solid var(--edge);border-radius:14px;padding:9px;min-height:100px;transition:border-color .18s,background .18s}
+.seat.turn{border-color:var(--lime);background:rgba(198,242,78,.08)}
+.seat.busted{opacity:.45}.seat.stayed{border-style:dashed}.seat.away{opacity:.6}
+.seat-top{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:5px}
+.seat-name{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat-score{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+.seat-state{font-size:11px;color:var(--gold);min-height:14px;font-weight:600;margin-bottom:4px}
+.mini{display:flex;flex-wrap:wrap;gap:3px}
+.mini .card{width:22px;height:30px;font-size:12px;border-radius:5px}
+.card{width:44px;height:60px;border-radius:9px;display:grid;place-items:center;font-weight:900;font-size:20px;line-height:1;color:#160f22;background:#e7e2f5;box-shadow:inset 0 -3px 0 rgba(0,0,0,.14);animation:deal .22s ease-out both;font-variant-numeric:tabular-nums}
+@keyframes deal{from{transform:translateY(-8px) scale(.9);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.card{animation:none}}
+.c-low{background:#9ee7ff}.c-mid{background:#c6f24e}.c-high{background:#ffc95c}.c-top{background:#ff8f6b}
+.c-mod{background:#f2eefb;color:#3a2f63;border:2px solid var(--lime)}
+.c-act{background:#3a2f63;color:#f2eefb;font-size:9px;font-weight:800;text-align:center;padding:2px;line-height:1.1}
+.mini .c-act{font-size:7px}
+.mine{background:rgba(255,255,255,.05);border:1px solid var(--edge);border-radius:18px;padding:14px;margin-bottom:12px}
+.mine.turn{border-color:var(--lime)}
+.mine-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.mine-name{font-weight:900;font-size:15px}
+.hand{display:flex;flex-wrap:wrap;gap:6px;min-height:60px;align-items:flex-start}
+.hand-empty{color:var(--dim);font-size:13px;align-self:center}
+.readout{display:flex;gap:18px;margin-top:12px;font-size:13px;color:var(--dim);flex-wrap:wrap}
+.readout b{color:var(--text);font-weight:800;font-variant-numeric:tabular-nums}
+.controls{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+button{font-family:inherit;font-weight:800;font-size:15px;border:none;border-radius:12px;padding:14px 18px;cursor:pointer;flex:1;color:#160f22;background:var(--lime);transition:transform .12s,filter .12s}
+button:hover:not(:disabled){filter:brightness(1.08)}
+button:active:not(:disabled){transform:translateY(1px)}
+button:focus-visible{outline:3px solid var(--ice);outline-offset:2px}
+button:disabled{opacity:.3;cursor:default}
+button.ghost{background:transparent;color:var(--text);border:1px solid var(--edge)}
+button.slim{flex:0 0 auto;padding:10px 14px;font-size:13px}
+.waiting{color:var(--dim);font-size:14px;padding:12px 0;text-align:center;margin-bottom:12px}
+.log{background:rgba(0,0,0,.22);border:1px solid var(--edge);border-radius:12px;padding:10px 12px;height:130px;overflow-y:auto;font-size:13px;line-height:1.5}
+.log p{margin:0 0 4px}.hi{color:var(--lime);font-weight:700}.bad{color:var(--hot);font-weight:700}.warm{color:var(--gold)}
+.veil{position:fixed;inset:0;background:rgba(10,7,20,.86);display:grid;place-items:center;padding:24px;z-index:10;padding-top:calc(24px + env(safe-area-inset-top,0px))}
+.veil[hidden]{display:none}
+.panel{background:var(--table-2);border:1px solid var(--edge);border-radius:18px;padding:20px;max-width:400px;width:100%}
+.panel h2{margin:0 0 6px;font-size:20px;font-weight:900;letter-spacing:-.01em}
+.panel p{margin:0 0 14px;color:var(--dim);font-size:14px;line-height:1.5}
+.stack{display:flex;flex-direction:column;gap:8px}
+.rules{font-size:13.5px;line-height:1.55;color:var(--dim);max-height:50vh;overflow-y:auto}
+.rules b{color:var(--text)}.rules li{margin-bottom:7px}.rules ul{padding-left:18px;margin:0 0 12px}
+input{font-family:inherit;font-size:16px;font-weight:700;width:100%;padding:13px;border-radius:12px;border:1px solid var(--edge);background:rgba(0,0,0,.25);color:var(--text);margin-bottom:9px}
+input.code{font-size:22px;font-weight:900;letter-spacing:.18em;text-align:center}
+input:focus{outline:3px solid var(--ice);outline-offset:2px}
+.roster{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font-size:14px;font-weight:700}
+.share{background:rgba(0,0,0,.25);border:1px dashed var(--edge);border-radius:10px;padding:10px;font-size:12.5px;color:var(--dim);word-break:break-all;margin-bottom:12px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--lime);margin-right:7px;vertical-align:middle}
+.dot.off{background:var(--edge)}
+@media (max-width:420px){.card{width:38px;height:52px;font-size:17px}.mini .card{width:19px;height:26px;font-size:11px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="brand">Flip <span>Siete</span></div><div class="meta" id="meta">Conectando…</div></div>
+  <div class="seats" id="seats"></div>
+  <div class="mine" id="mine">
+    <div class="mine-top"><div class="mine-name" id="myName">Tú</div><div class="seat-score" id="myTotal">0 pts</div></div>
+    <div class="hand" id="myHand"></div>
+    <div class="readout">
+      <div>En juego <b id="roundPts">0</b></div>
+      <div>Distintos <b id="uniq">0</b>/7</div>
+      <div>Mazo <b id="deckLeft">94</b></div>
+    </div>
+  </div>
+  <div id="actions"></div>
+  <div class="log" id="log"></div>
+  <div class="controls" style="margin-top:12px">
+    <button class="ghost slim" id="rulesBtn">Reglas</button>
+    <button class="ghost slim" id="leaveBtn">Cambiar de mesa</button>
+  </div>
+</div>
+<div class="veil" id="veil" hidden><div class="panel" id="panel"></div></div>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const ACT={freeze:'CONGELAR',flip3:'VOLTEAR 3',second:'2.ª OPORT.'};
+let ws=null,S=null,me=null,code='',myName='',retry=0,clock=null;
+
+/* identidad local: un id estable por navegador */
+try{
+  me=localStorage.getItem('f7id');
+  if(!me){me='p'+Math.random().toString(36).slice(2,10);localStorage.setItem('f7id',me);}
+  myName=localStorage.getItem('f7name')||'';
+}catch(e){ me='p'+Math.random().toString(36).slice(2,10); }
+
+/* ---------- conexión ---------- */
+function connect(){
+  const proto=location.protocol==='https:'?'wss':'ws';
+  ws=new WebSocket(proto+'://'+location.host);
+  ws.onopen=()=>{retry=0;send({type:'join',code,id:me,name:myName});};
+  ws.onmessage=e=>{
+    const m=JSON.parse(e.data);
+    if(m.type==='state'){S=m.state;render();}
+    else if(m.type==='error')toast(m.msg);
+  };
+  ws.onclose=()=>{
+    $('meta').textContent='Reconectando…';
+    retry=Math.min(retry+1,6);
+    setTimeout(connect,400*retry);
+  };
+}
+function send(o){ if(ws&&ws.readyState===1)ws.send(JSON.stringify(o)); }
+function toast(msg){
+  const p=document.createElement('p');p.className='warm';p.textContent=msg;
+  $('log').appendChild(p);$('log').scrollTop=$('log').scrollHeight;
+}
+
+/* ---------- dibujo ---------- */
+function cardEl(c){
+  const d=document.createElement('div');d.className='card';
+  if(c.t==='n'){d.textContent=c.v;d.classList.add(c.v<=3?'c-low':c.v<=7?'c-mid':c.v<=10?'c-high':'c-top');}
+  else if(c.t==='m'){d.textContent='+'+c.v;d.classList.add('c-mod');}
+  else if(c.t==='x2'){d.textContent='×2';d.classList.add('c-mod');}
+  else{d.textContent=ACT[c.a];d.classList.add('c-act');}
+  return d;
+}
+function handOf(p){
+  const o=p.nums.map(v=>({t:'n',v}));
+  p.mods.forEach(v=>o.push({t:'m',v}));
+  if(p.x2)o.push({t:'x2'});
+  if(p.sc)o.push({t:'a',a:'second'});
+  return o;
+}
+function render(){
+  if(!S)return;
+  if(S.phase==='lobby'){lobby();return;}
+  hide();
+  $('meta').textContent='Mesa '+S.code+' · ronda '+S.round+' · meta '+S.goal;
+  const my=S.players.find(p=>p.id===me);
+  const box=$('seats');box.innerHTML='';
+  S.players.forEach(p=>{
+    if(p.id===me)return;
+    const s=document.createElement('div');
+    s.className='seat '+(p.state==='bust'?'busted':p.state==='out'?'stayed':'')+(S.turnId===p.id?' turn':'')+(p.online?'':' away');
+    const st=p.state==='bust'?'Se pasó':p.state==='out'?'Plantado · '+p.pts:p.nums.length?p.pts+' en juego':'';
+    const top=document.createElement('div');top.className='seat-top';
+    const nm=document.createElement('div');nm.className='seat-name';nm.textContent=(p.online?'':'· ')+p.name;
+    const sc=document.createElement('div');sc.className='seat-score';sc.textContent=p.total;
+    top.append(nm,sc);
+    const stv=document.createElement('div');stv.className='seat-state';stv.textContent=st;
+    const mini=document.createElement('div');mini.className='mini';
+    handOf(p).forEach(c=>mini.appendChild(cardEl(c)));
+    s.append(top,stv,mini);box.appendChild(s);
+  });
+  $('myName').textContent=my?my.name:'Espectador';
+  $('myTotal').textContent=(my?my.total:0)+' pts';
+  const hand=$('myHand');hand.innerHTML='';
+  const cards=my?handOf(my):[];
+  if(!cards.length){
+    const e=document.createElement('div');e.className='hand-empty';
+    e.textContent=my?(my.state==='bust'?'Ronda perdida.':'Sin cartas todavía.'):'Estás viendo la partida.';
+    hand.appendChild(e);
+  }else cards.forEach(c=>hand.appendChild(cardEl(c)));
+  $('roundPts').textContent=my?my.pts:0;
+  $('uniq').textContent=my?my.nums.length:0;
+  $('deckLeft').textContent=S.deckLeft;
+  $('mine').className='mine'+(S.turnId===me?' turn':'');
+  const lg=$('log');lg.innerHTML='';
+  S.log.forEach(l=>{const p=document.createElement('p');p.className=l.k;p.textContent=l.t;lg.appendChild(p);});
+  lg.scrollTop=lg.scrollHeight;
+  actions();
+}
+function actions(){
+  const box=$('actions');box.innerHTML='';
+  clearInterval(clock);
+  if(S.phase==='between'||S.phase==='over'){
+    const row=document.createElement('div');row.className='controls';
+    if(S.hostId===me){
+      const b=document.createElement('button');
+      b.textContent=S.phase==='over'?'Partida nueva':'Repartir siguiente ronda';
+      b.onclick=()=>send({type:'next'});row.appendChild(b);
+    }else row.innerHTML='<div class="waiting">Esperando al anfitrión…</div>';
+    box.appendChild(row);return;
+  }
+  if(S.phase!=='play')return;
+  if(S.turnId!==me){
+    const who=S.players.find(p=>p.id===S.turnId);
+    box.innerHTML='<div class="waiting">Turno de '+(who?who.name:'…')+'</div>';
+    const row=document.createElement('div');row.className='controls';
+    const b=document.createElement('button');b.className='ghost';
+    b.textContent='Plantar a '+(who?who.name:'')+' (ausente)';
+    b.onclick=()=>send({type:'skip'});
+    row.appendChild(b);box.appendChild(row);
+    const upd=()=>{b.disabled=Date.now()-S.lastAction<30000;
+      b.style.display=Date.now()-S.lastAction<15000?'none':'block';};
+    upd();clock=setInterval(upd,1000);
+    return;
+  }
+  if(S.pending&&S.pending.chooser===me){
+    box.innerHTML='<div class="waiting">'+ACT[S.pending.kind]+' · elige a quién</div>';
+    const row=document.createElement('div');row.className='controls';
+    const opts=S.pending.kind==='second'
+      ? S.players.filter(p=>p.state==='in'&&p.id!==me&&!p.sc)
+      : S.players.filter(p=>p.state==='in');
+    opts.forEach(p=>{
+      const b=document.createElement('button');
+      b.textContent=p.id===me?'A mí':p.name;
+      if(S.pending.kind!=='second'&&p.id!==me)b.className='ghost';
+      b.onclick=()=>send({type:'choice',target:p.id});
+      row.appendChild(b);
+    });
+    box.appendChild(row);return;
+  }
+  if(S.queue&&S.queue.player===me&&S.queue.left>0){
+    const row=document.createElement('div');row.className='controls';
+    const b=document.createElement('button');
+    b.textContent='Voltear ('+S.queue.left+' obligadas)';
+    b.onclick=()=>send({type:'hit'});row.appendChild(b);box.appendChild(row);return;
+  }
+  const row=document.createElement('div');row.className='controls';
+  const h=document.createElement('button');h.textContent='Pedir carta';h.onclick=()=>send({type:'hit'});
+  const s=document.createElement('button');s.className='ghost';s.textContent='Plantarse';s.onclick=()=>send({type:'stay'});
+  row.append(h,s);box.appendChild(row);
+}
+
+/* ---------- modales ---------- */
+function modal(html,after){$('panel').innerHTML=html;$('veil').hidden=false;if(after)after();}
+function hide(){$('veil').hidden=true;}
+
+function lobby(){
+  const link=location.origin+location.pathname+'#'+S.code;
+  let html='<h2>Mesa '+S.code+'</h2><p>Pásales este enlace. Entran directo a esta mesa.</p>'+
+    '<div class="share" id="link">'+link+'</div><div class="roster">';
+  S.players.forEach(p=>{
+    html+='<div><span class="dot'+(p.online?'':' off')+'"></span>'+esc(p.name)+
+      (p.id===S.hostId?' · anfitrión':'')+(p.id===me?' (tú)':'')+'</div>';
+  });
+  html+='</div><div class="stack">';
+  if(S.hostId===me){
+    html+='<button id="start">Repartir</button>';
+    if(S.players.filter(p=>p.bot).length<3)html+='<button id="bot" class="ghost">Añadir un bot</button>';
+  }else html+='<div class="waiting">Esperando a que reparta el anfitrión…</div>';
+  html+='<button id="copy" class="ghost">Copiar enlace</button></div>';
+  modal(html,()=>{
+    const s=$('start'),b=$('bot');
+    if(s)s.onclick=()=>send({type:'start'});
+    if(b)b.onclick=()=>send({type:'addBot'});
+    $('copy').onclick=()=>{
+      navigator.clipboard.writeText(link).then(()=>{$('copy').textContent='Enlace copiado';},()=>{});
+    };
+  });
+  $('meta').textContent='Mesa '+S.code;
+}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function askName(){
+  const guess=(location.hash||'').replace('#','').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);
+  modal('<h2>Flip Siete</h2><p>Junta números distintos sin repetir ninguno. Primero en llegar a 200 gana.</p>'+
+    '<input id="nm" maxlength="14" placeholder="Tu nombre" autocomplete="off">'+
+    '<input id="cd" class="code" maxlength="8" placeholder="CÓDIGO" autocomplete="off">'+
+    '<div class="stack" style="margin-top:6px"><button id="go">Entrar a la mesa</button></div>',
+    ()=>{
+      $('nm').value=myName;
+      $('cd').value=guess;
+      $('cd').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');};
+      const go=()=>{
+        const n=$('nm').value.trim(),c=$('cd').value.trim();
+        if(!n){$('nm').focus();return;}
+        if(c.length<3){$('cd').focus();return;}
+        myName=n;code=c;
+        try{localStorage.setItem('f7name',n);}catch(e){}
+        location.hash=c;hide();connect();
+      };
+      $('go').onclick=go;
+      $('nm').onkeydown=$('cd').onkeydown=e=>{if(e.key==='Enter')go();};
+      setTimeout(()=>{($('nm').value?$('cd'):$('nm')).focus();},60);
+    });
+}
+$('leaveBtn').onclick=()=>{if(ws){ws.onclose=null;ws.close();}S=null;askName();};
+$('rulesBtn').onclick=()=>{
+  modal(`<h2>Cómo se juega</h2><div class="rules"><ul>
+  <li>En tu turno: <b>pides carta</b> o <b>te plantas</b>. Plantarte guarda los puntos de la ronda.</li>
+  <li>Si sale un número que <b>ya tienes</b>, pierdes todo lo de esa ronda.</li>
+  <li>Siete números distintos: <b>+15</b> y la ronda se cierra para todos.</li>
+  <li><b>+2 a +10</b> suman al final; la <b>×2</b> duplica solo la suma de los números.</li>
+  <li><b>Congelar</b>: alguien (puedes ser tú) se planta de inmediato.</li>
+  <li><b>Voltear 3</b>: el elegido roba tres cartas seguidas sin poder parar.</li>
+  <li><b>Segunda oportunidad</b>: te salva de un repetido una vez; si ya tienes una, la regalas.</li>
+  <li>Gana quien llegue a <b>200</b> al cerrar una ronda.</li></ul>
+  <p style="margin:0">El "riesgo" que ves es la probabilidad real de repetir con la siguiente carta.</p></div>
+  <div class="stack" style="margin-top:14px"><button id="close">Volver</button></div>`,()=>{$('close').onclick=()=>{S?render():askName();};});
+};
+askName();
+})();
+</script>
+</body>
+</html>
